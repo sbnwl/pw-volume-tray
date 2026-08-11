@@ -281,9 +281,10 @@ static GtkWidget *build_popup(App *a, gboolean arrow_up, gboolean show_arrow)
     }
     gtk_box_pack_start(GTK_BOX(box), combo, FALSE, FALSE, 0);
 
-    a->mute_btn = gtk_button_new_with_label((def && def->muted) ? "Unmute" : "Mute");
+    a->mute_btn = gtk_button_new_with_label("Mute");
     g_signal_connect(a->mute_btn, "clicked", G_CALLBACK(on_mute_clicked), a);
     gtk_box_pack_start(GTK_BOX(box), a->mute_btn, FALSE, FALSE, 0);
+    update_mute_button(a->mute_btn, def && def->muted);
 
     if (def) {
         a->sink_id = def->id;

@@ -21,7 +21,9 @@
  *                first.
  *   actions.c  — set_volume/set_default/bump_volume/do_toggle_mute/
  *                do_unmute_if_muted: thin fire-and-forget wrappers over
- *                run_async().
+ *                run_async(). update_mute_button() is the single place
+ *                that sets the mute button's label and red/normal style
+ *                together, shared by actions.c, state.c, and popup.c.
  *   state.c    — refresh_icon(): the single place that reconciles the
  *                tray icon and open popup with one fresh Snapshot.
  *   popup.c    — the speech-bubble popup window: shape, positioning,
@@ -132,6 +134,7 @@ gdouble   node_effective_volume(const Node *n);
 void set_volume(guint id, gdouble v);
 void set_default(guint id);
 void bump_volume(gint pct);
+void update_mute_button(GtkWidget *btn, gboolean muted);
 void do_toggle_mute(App *a);
 void do_unmute_if_muted(App *a);
 

@@ -32,12 +32,29 @@ void bump_volume(gint pct)
     run_async("wpctl set-volume @DEFAULT_SINK@ %d%%%s", abs(pct), pct < 0 ? "-" : "+");
 }
 
+/* Sets both the mute button's label and its visual state from one place,
+ * so do_toggle_mute(), do_unmute_if_muted(), and build_popup()'s initial
+ * state can't drift out of sync with each other. The "destructive-action"
+ * style class is GTK's own built-in convention for "dangerous/attention"
+ * buttons (the same one theme delete/remove buttons use) — this lets the
+ * active theme pick the actual shade rather than hardcoding a color here. */
+void update_mute_button(GtkWidget *btn, gboolean muted)
+{
+    if (!btn) return;
+    gtk_button_set_label(GTK_BUTTON(btn), muted ? "Unmute" : "Mute");
+
+    GtkStyleContext *ctx = gtk_widget_get_style_context(btn);
+    if (muted)
+        gtk_style_context_add_class(ctx, "destructive-action");
+    else
+        gtk_style_context_remove_class(ctx, "destructive-action");
+}
+
 void do_toggle_mute(App *a)
 {
     toggle_mute_cmd();
     a->muted = !a->muted;
-    if (a->mute_btn)
-        gtk_button_set_label(GTK_BUTTON(a->mute_btn), a->muted ? "Unmute" : "Mute");
+    update_mute_button(a->mute_btn, a->muted);
 }
 
 /* Explicit unmute, not a toggle, so this can never accidentally re-mute —
@@ -50,6 +67,5 @@ void do_unmute_if_muted(App *a)
     if (!a->muted) return;
     run_async("wpctl set-mute @DEFAULT_SINK@ 0");
     a->muted = FALSE;
-    if (a->mute_btn)
-        gtk_button_set_label(GTK_BUTTON(a->mute_btn), "Mute");
+    update_mute_button(a->mute_btn, FALSE);
 }

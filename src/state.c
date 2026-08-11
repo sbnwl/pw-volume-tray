@@ -31,8 +31,7 @@ void refresh_icon(App *a)
         gtk_range_set_value(GTK_RANGE(a->scale), node_effective_volume(def));
         g_signal_handler_unblock(a->scale, a->scale_handler);
     }
-    if (a->mute_btn)
-        gtk_button_set_label(GTK_BUTTON(a->mute_btn), def->muted ? "Unmute" : "Mute");
+    update_mute_button(a->mute_btn, def->muted);
 
     snapshot_free(s);
 }
