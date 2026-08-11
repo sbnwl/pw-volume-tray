@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=PipeWire Tray
+Comment=Compact PipeWire volume tray applet
+Exec=pw-tray
+Icon=audio-volume-high
+Terminal=false
+Categories=AudioVideo;Audio;Mixer;
+NoDisplay=true
