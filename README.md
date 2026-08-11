@@ -87,5 +87,13 @@ make uninstall            # matches whatever PREFIX you installed with
 ├── data/           desktop entry (data/pw-tray.desktop)
 ├── Makefile
 ├── README.md
-└── src/            pw-tray.c
+└── src/
+    ├── pw-tray.h   shared types/constants + module map
+    ├── exec.c      process spawning (run/run_async)
+    ├── model.c     Node/Snapshot + wpctl status parsing
+    ├── actions.c   fire-and-forget wpctl commands
+    ├── state.c     tray icon + popup reconciliation
+    ├── popup.c     the speech-bubble popup window
+    ├── trayicon.c  GtkStatusIcon signals + right-click menu
+    └── main.c      wiring
 ```

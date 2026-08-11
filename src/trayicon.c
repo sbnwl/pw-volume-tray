@@ -69,6 +69,11 @@ static void on_popup_menu(GtkStatusIcon *icon, guint button, guint time, App *a)
     Snapshot *s = fetch_snapshot(); /* shared by both submenus below */
 
     GtkWidget *menu = gtk_menu_new();
+    /* gtk_menu_popup*() does not free a popup menu once it's dismissed —
+     * this is a documented GTK behavior, not an oversight here — so a
+     * freshly built menu like this one must be told to self-destruct
+     * once it's done, or it leaks on every right-click. */
+    g_signal_connect(menu, "selection-done", G_CALLBACK(gtk_widget_destroy), NULL);
 
     GtkWidget *out = gtk_menu_item_new_with_label("Output");
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(out), build_node_submenu(s ? s->sinks : NULL, a));

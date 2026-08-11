@@ -16,7 +16,7 @@ void report_error(const gchar *msg)
 
     if (!g_app || !g_app->icon) return;
     gtk_status_icon_set_from_icon_name(g_app->icon, "dialog-warning");
-    gtk_status_icon_set_tooltip_text(g_app->icon, msg);   /* comment out for production */
+    gtk_status_icon_set_tooltip_text(g_app->icon, msg);
 }
 
 gchar *run(const gchar *cmd)

@@ -12,7 +12,10 @@
 
 void set_volume(guint id, gdouble v) { run_async("wpctl set-volume %u %.3f", id, v); }
 void set_default(guint id)           { run_async("wpctl set-default %u", id); }
-void toggle_mute_cmd(void)           { run_async("wpctl set-mute @DEFAULT_SINK@ toggle"); }
+
+/* Only called from do_toggle_mute() below, so kept file-local rather than
+ * exposed as cross-module API in pw-tray.h. */
+static void toggle_mute_cmd(void)    { run_async("wpctl set-mute @DEFAULT_SINK@ toggle"); }
 
 void bump_volume(gint pct)
 {

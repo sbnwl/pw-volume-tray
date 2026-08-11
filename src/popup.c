@@ -226,8 +226,8 @@ static GtkWidget *build_popup(App *a, gboolean arrow_up, gboolean show_arrow)
     GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
     gtk_widget_set_margin_start(box, BUBBLE_MARGIN);
     gtk_widget_set_margin_end(box, BUBBLE_MARGIN);
-    gtk_widget_set_margin_top(box, BUBBLE_MARGIN + (show_arrow && arrow_up  ? ARROW_H : 0));
-    gtk_widget_set_margin_bottom(box, BUBBLE_MARGIN + (show_arrow && !arrow_up ? ARROW_H : 0));
+    gtk_widget_set_margin_top(box, BUBBLE_MARGIN + (show_arrow && arrow_up  ? (gint)ARROW_H : 0));
+    gtk_widget_set_margin_bottom(box, BUBBLE_MARGIN + (show_arrow && !arrow_up ? (gint)ARROW_H : 0));
     gtk_widget_set_size_request(box, POPUP_WIDTH_MAX, -1);
     gtk_container_add(GTK_CONTAINER(win), box);
 
