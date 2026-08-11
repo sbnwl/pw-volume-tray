@@ -14,8 +14,18 @@ void set_volume(guint id, gdouble v) { run_async("wpctl set-volume %u %.3f", id,
 void set_default(guint id)           { run_async("wpctl set-default %u", id); }
 
 /* Only called from do_toggle_mute() below, so kept file-local rather than
- * exposed as cross-module API in pw-tray.h. */
-static void toggle_mute_cmd(void)    { run_async("wpctl set-mute @DEFAULT_SINK@ toggle"); }
+ * exposed as cross-module API in pw-tray.h. Deliberately synchronous
+ * (unlike every other action here) — do_toggle_mute() and its callers
+ * immediately re-check state via refresh_icon() right after, and that
+ * re-check must see the *post*-mute state. run_async() gives no such
+ * guarantee: it returns before wpctl has actually finished, so an
+ * immediate refresh_icon() could win the race and read stale, pre-mute
+ * state, undoing the mute it just performed. */
+static void toggle_mute_cmd(void)
+{
+    gchar *out = run("wpctl set-mute @DEFAULT_SINK@ toggle");
+    g_free(out);
+}
 
 void bump_volume(gint pct)
 {
