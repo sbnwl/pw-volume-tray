@@ -2,8 +2,8 @@
  * state.c — reconciling live state with the tray icon and popup.
  *
  * refresh_icon() is the single place that does this, from one fresh
- * Snapshot. It's called on the poll timer, after scroll, and after a
- * menu/combo selection — never more than once per event.
+ * Snapshot. It's called on the poll timer and after a menu/combo
+ * selection — never more than once per event.
  */
 
 #include "pw-tray.h"

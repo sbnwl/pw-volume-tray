@@ -11,10 +11,18 @@ static void on_activate(GtkStatusIcon *icon, App *a) { (void)icon; toggle_popup(
 
 static void on_scroll(GtkStatusIcon *icon, GdkEventScroll *ev, App *a)
 {
-    (void)icon;
+    (void)icon; (void)a;
+    /* No immediate refresh_icon() here on purpose: bump_volume() is
+     * async (deliberately, since a fast scroll burst can fire many of
+     * these events in under a second — making it synchronous, like
+     * set_default()/toggle_mute_cmd(), would risk each one briefly
+     * blocking the main loop and stacking into visible judder). An
+     * immediate synchronous refresh right after would just race an
+     * async command, same failure mode already fixed elsewhere. The
+     * periodic REFRESH_SECS tick reconciles the tray icon glyph shortly
+     * after; the actual audio change is instant either way. */
     if (ev->direction == GDK_SCROLL_UP   || ev->delta_y < 0) bump_volume(+5);
     if (ev->direction == GDK_SCROLL_DOWN || ev->delta_y > 0) bump_volume(-5);
-    refresh_icon(a);
 }
 
 static gboolean on_button_press(GtkStatusIcon *icon, GdkEventButton *ev, App *a)

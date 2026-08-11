@@ -11,7 +11,21 @@
 #include <stdlib.h> /* abs() */
 
 void set_volume(guint id, gdouble v) { run_async("wpctl set-volume %u %.3f", id, v); }
-void set_default(guint id)           { run_async("wpctl set-default %u", id); }
+/* Deliberately synchronous (unlike most actions here) — same reasoning
+ * as toggle_mute_cmd() below: both of this function's call sites
+ * (popup.c's output combo, trayicon.c's right-click menu) immediately
+ * re-check state via refresh_icon() right after. run_async() gives no
+ * guarantee the switch has actually landed by then, so an immediate
+ * refresh_icon() could win the race and briefly show the old sink's
+ * state — including its mute-button color — on what looks like the
+ * newly selected output. */
+void set_default(guint id)
+{
+    gchar *cmd = g_strdup_printf("wpctl set-default %u", id);
+    gchar *out = run(cmd);
+    g_free(cmd);
+    g_free(out);
+}
 
 /* Only called from do_toggle_mute() below, so kept file-local rather than
  * exposed as cross-module API in pw-tray.h. Deliberately synchronous
