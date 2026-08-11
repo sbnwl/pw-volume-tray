@@ -11,7 +11,7 @@ static void on_activate(GtkStatusIcon *icon, App *a) { (void)icon; toggle_popup(
 
 static void on_scroll(GtkStatusIcon *icon, GdkEventScroll *ev, App *a)
 {
-    (void)icon; (void)a;
+    (void)icon;
     /* No immediate refresh_icon() here on purpose: bump_volume() is
      * async (deliberately, since a fast scroll burst can fire many of
      * these events in under a second — making it synchronous, like
@@ -21,14 +21,31 @@ static void on_scroll(GtkStatusIcon *icon, GdkEventScroll *ev, App *a)
      * async command, same failure mode already fixed elsewhere. The
      * periodic REFRESH_SECS tick reconciles the tray icon glyph shortly
      * after; the actual audio change is instant either way. */
-    if (ev->direction == GDK_SCROLL_UP   || ev->delta_y < 0) bump_volume(+5);
-    if (ev->direction == GDK_SCROLL_DOWN || ev->delta_y > 0) bump_volume(-5);
+    gint delta = 0;
+    if (ev->direction == GDK_SCROLL_UP   || ev->delta_y < 0) delta = +5;
+    if (ev->direction == GDK_SCROLL_DOWN || ev->delta_y > 0) delta = -5;
+    if (!delta) return;
+
+    bump_volume(delta);
+
+    /* Same "optimistic local estimate" approach used elsewhere (e.g.
+     * do_toggle_mute()'s label flip) — good enough for a quick OSD
+     * glance, self-corrects at the next poll tick, and needs no new
+     * wpctl query (which would reintroduce the exact race/jank risk
+     * avoided above). */
+    a->last_volume = CLAMP(a->last_volume + delta / 100.0, 0.0, 1.0);
+    osd_show(a->last_volume, a->muted);
 }
 
 static gboolean on_button_press(GtkStatusIcon *icon, GdkEventButton *ev, App *a)
 {
     (void)icon;
-    if (ev->button == 2) { do_toggle_mute(a); refresh_icon(a); return TRUE; }
+    if (ev->button == 2) {
+        do_toggle_mute(a);
+        osd_show(a->last_volume, a->muted);
+        refresh_icon(a);
+        return TRUE;
+    }
     return FALSE;
 }
 
@@ -64,11 +81,16 @@ static GtkWidget *build_node_submenu(GPtrArray *nodes, App *a)
     return menu;
 }
 
+/* Silent on purpose (see run_async_silent()'s own comment) — the mixer
+ * is a genuinely optional convenience, same category as the OSD's
+ * notify-send. If pavucontrol (or a custom PWTRAY_MIXER) isn't
+ * installed, clicking this simply does nothing; that's not an error
+ * pw-tray should be raising its own warning icon over. */
 static void open_mixer(GtkMenuItem *item, gpointer data)
 {
     (void)item; (void)data;
     const gchar *mixer = g_getenv(MIXER_ENV);
-    run_async("%s", (mixer && *mixer) ? mixer : MIXER_DEFAULT);
+    run_async_silent("%s", (mixer && *mixer) ? mixer : MIXER_DEFAULT);
 }
 
 static void on_popup_menu(GtkStatusIcon *icon, guint button, guint time, App *a)

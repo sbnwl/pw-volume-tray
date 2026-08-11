@@ -10,6 +10,11 @@
  * Module map (mirrors the .c files in this directory):
  *   exec.c     — run()/run_async(): the only two functions that touch
  *                g_spawn_*. Every failure goes through report_error().
+ *                run_async_silent() is a third, narrow exception: same
+ *                as run_async() but never reports failure — used only
+ *                for genuinely optional integrations (osd.c) where "the
+ *                external tool isn't installed" isn't pw-tray's error
+ *                to raise.
  *   model.c    — Node/Snapshot + fetch_snapshot(): one `wpctl status` call
  *                parses sinks and sources (id, name, default flag, volume,
  *                mute) in a single pass. Everything else that needs sink
@@ -25,11 +30,18 @@
  *                that sets the mute button's label and red/normal style
  *                together, shared by actions.c, state.c, and popup.c.
  *   state.c    — refresh_icon(): the single place that reconciles the
- *                tray icon and open popup with one fresh Snapshot.
+ *                tray icon and open popup with one fresh Snapshot, and
+ *                caches the last known raw volume in App::last_volume.
+ *                volume_icon_name() is the shared icon-name logic, used
+ *                by both refresh_icon() and osd.c.
  *   popup.c    — the speech-bubble popup window: shape, positioning,
  *                slider/combo/mute button, and its own open/close and
  *                auto-close behavior.
  *   trayicon.c — GtkStatusIcon signal handlers and the right-click menu.
+ *   osd.c      — optional on-screen volume/mute notifications via
+ *                notify-send, triggered only from trayicon.c's own
+ *                scroll and middle-click handlers (never from the
+ *                popup, which is already its own live feedback).
  *   main.c     — wiring: owns the App instance and g_app, calls gtk_init/
  *                gtk_main.
  */
@@ -102,6 +114,13 @@ typedef struct {
     gulong         scale_handler;
     guint          sink_id;
     gboolean       muted;
+    gdouble        last_volume; /* raw volume from the most recent
+                                    refresh_icon() call; scroll's OSD
+                                    adjusts this locally by the same
+                                    delta bump_volume() requests, purely
+                                    for display — an estimate, not
+                                    authoritative, self-corrects at the
+                                    next poll tick */
 
     /* Popup shape/position, set once per open in toggle_popup() and read
      * by draw_bubble(). arrow_x is in the popup window's own coordinates. */
@@ -120,6 +139,7 @@ extern App *g_app;
 
 gchar *run(const gchar *cmd);
 void   run_async(const gchar *fmt, ...);
+void   run_async_silent(const gchar *fmt, ...);
 void   report_error(const gchar *msg);
 
 /* ---------------------------------------------------------------- model */
@@ -142,6 +162,7 @@ void do_unmute_if_muted(App *a);
 
 void     refresh_icon(App *a);
 gboolean tick_cb(gpointer a);
+const gchar *volume_icon_name(gboolean muted, gdouble volume);
 
 /* ---------------------------------------------------------------- popup */
 
@@ -150,5 +171,9 @@ void toggle_popup(App *a);
 /* ------------------------------------------------------------- trayicon */
 
 void trayicon_init(App *a);
+
+/* ------------------------------------------------------------------ osd */
+
+void osd_show(gdouble volume, gboolean muted);
 
 #endif /* PWTRAY_H */

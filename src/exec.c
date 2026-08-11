@@ -64,3 +64,18 @@ void run_async(const gchar *fmt, ...)
     }
     g_free(cmd);
 }
+
+/* Same as run_async() but never reports failure. For a feature the user
+ * never explicitly asked to enable (see osd.c), "the external tool isn't
+ * installed" is expected and unremarkable, not something that should
+ * ever raise pw-tray's own warning icon. */
+void run_async_silent(const gchar *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    gchar *cmd = g_strdup_vprintf(fmt, args);
+    va_end(args);
+
+    g_spawn_command_line_async(cmd, NULL);
+    g_free(cmd);
+}

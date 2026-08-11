@@ -8,6 +8,17 @@
 
 #include "pw-tray.h"
 
+/* Which icon name represents a given (muted, volume) pair. Pure and
+ * shared — used here and by osd.c, so the two can't disagree about what
+ * "low" vs "medium" volume looks like. */
+const gchar *volume_icon_name(gboolean muted, gdouble volume)
+{
+    return (muted || volume <= 0.001) ? "audio-volume-muted"
+         : (volume < 0.34)            ? "audio-volume-low"
+         : (volume < 0.67)            ? "audio-volume-medium"
+                                       : "audio-volume-high";
+}
+
 void refresh_icon(App *a)
 {
     Snapshot *s = fetch_snapshot();
@@ -19,12 +30,9 @@ void refresh_icon(App *a)
     a->sink_id = def->id;
     a->muted   = def->muted;
     gdouble vol = def->volume < 0 ? 0 : def->volume;
+    a->last_volume = vol;
 
-    const gchar *icon = (def->muted || vol <= 0.001) ? "audio-volume-muted"
-                       : (vol < 0.34)                 ? "audio-volume-low"
-                       : (vol < 0.67)                 ? "audio-volume-medium"
-                                                       : "audio-volume-high";
-    gtk_status_icon_set_from_icon_name(a->icon, icon);
+    gtk_status_icon_set_from_icon_name(a->icon, volume_icon_name(def->muted, vol));
 
     if (a->scale) {
         g_signal_handler_block(a->scale, a->scale_handler);
