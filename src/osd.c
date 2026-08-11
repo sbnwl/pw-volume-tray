@@ -34,7 +34,7 @@
 
 void osd_show(gdouble volume, gboolean muted)
 {
-    gint pct = (gint)(CLAMP(volume, 0.0, 1.0) * 100.0 + 0.5);
+    gint pct = volume_percent(volume);
     const gchar *icon    = volume_icon_name(muted, volume);
     const gchar *summary = muted ? "Muted" : "Volume";
 

@@ -54,25 +54,27 @@
 /* ------------------------------------------------------------- config */
 
 #define APP_NAME      "PipeWire Tray"
-#define POPUP_TITLE   "Audio Volume"   /* user-facing heading shown at the
-                                           top of the popup; kept separate
-                                           from APP_NAME, which is used for
-                                           the tray icon's own title/
-                                           tooltip and is not shown in the
-                                           popup itself */
 #define ICON_NAME     "audio-volume-high"
 #define MIXER_ENV     "PWTRAY_MIXER"
 #define MIXER_DEFAULT "pavucontrol"
 #define REFRESH_SECS  2
 
-#define POPUP_WIDTH_MAX 260   /* hard ceiling on popup content width, in
+#define POPUP_WIDTH_MAX 180   /* hard ceiling on popup content width, in
                                  pixels; enforced in popup.c by capping the
                                  output combo's cell renderer directly, not
                                  by this constant alone — gtk_widget_set_
                                  size_request() (used on both the box and,
                                  formerly, this value) only ever sets a
-                                 minimum, never a maximum */
-#define BUBBLE_MARGIN   12   /* padding between content and popup edge */
+                                 minimum, never a maximum. Confirmed at
+                                 100px: GtkScale (the slider) has no
+                                 equivalent "cap the natural width" trick
+                                 the combo has, and the slider was squeezed
+                                 down to a single point rather than
+                                 shrinking the popup further. 180 hasn't
+                                 hit that failure yet, but isn't confirmed
+                                 safe either — if it recurs, raise this
+                                 rather than fighting the slider further. */
+#define BUBBLE_MARGIN    8   /* padding between content and popup edge */
 #define BUBBLE_RADIUS   10.0 /* corner radius of the speech-bubble body */
 #define ARROW_W         20.0 /* width of the pointer triangle's base */
 #define ARROW_H         10.0 /* height the pointer triangle adds */
@@ -110,6 +112,10 @@ typedef struct {
     GtkStatusIcon *icon;
     GtkWidget     *popup;
     GtkWidget     *scale;
+    GtkWidget     *vol_icon;   /* volume-level icon shown in the popup's
+                                   compact top row; dynamic, mirrors the
+                                   tray icon's own icon selection */
+    GtkWidget     *vol_label;  /* "N%" label next to vol_icon */
     GtkWidget     *mute_btn;
     gulong         scale_handler;
     guint          sink_id;
@@ -163,6 +169,7 @@ void do_unmute_if_muted(App *a);
 void     refresh_icon(App *a);
 gboolean tick_cb(gpointer a);
 const gchar *volume_icon_name(gboolean muted, gdouble volume);
+gint     volume_percent(gdouble volume);
 
 /* ---------------------------------------------------------------- popup */
 

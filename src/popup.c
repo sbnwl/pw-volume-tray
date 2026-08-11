@@ -48,7 +48,7 @@ static void popup_destroyed(GtkWidget *w, App *a)
         g_source_remove(a->leave_timeout_id);
         a->leave_timeout_id = 0;
     }
-    a->popup = a->scale = a->mute_btn = NULL;
+    a->popup = a->scale = a->mute_btn = a->vol_icon = a->vol_label = NULL;
 }
 
 /* Traces a rounded-rectangle body with an optional triangular pointer cut
@@ -225,7 +225,7 @@ static GtkWidget *build_popup(App *a, gboolean arrow_up, gboolean show_arrow)
     g_signal_connect(win, "focus-out-event", G_CALLBACK(on_popup_focus_out), a);
     g_signal_connect(win, "button-press-event", G_CALLBACK(on_popup_outside_click), a);
 
-    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     gtk_widget_set_margin_start(box, BUBBLE_MARGIN);
     gtk_widget_set_margin_end(box, BUBBLE_MARGIN);
     gtk_widget_set_margin_top(box, BUBBLE_MARGIN + (show_arrow && arrow_up  ? (gint)ARROW_H : 0));
@@ -233,18 +233,28 @@ static GtkWidget *build_popup(App *a, gboolean arrow_up, gboolean show_arrow)
     gtk_widget_set_size_request(box, POPUP_WIDTH_MAX, -1);
     gtk_container_add(GTK_CONTAINER(win), box);
 
-    GtkWidget *title = gtk_label_new(POPUP_TITLE);
-    gtk_style_context_add_class(gtk_widget_get_style_context(title), "pwtray-title");
-    gtk_box_pack_start(GTK_BOX(box), title, FALSE, FALSE, 0);
+    GtkWidget *vol_row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    a->vol_icon = gtk_image_new_from_icon_name("audio-volume-muted", GTK_ICON_SIZE_SMALL_TOOLBAR);
+    gtk_box_pack_start(GTK_BOX(vol_row), a->vol_icon, FALSE, FALSE, 0);
+
+    a->vol_label = gtk_label_new("0%");
+    gtk_widget_set_size_request(a->vol_label, 32, -1); /* fixed width so
+        the slider next to it doesn't shift as the digit count changes
+        (e.g. "8%" vs "100%") */
+    gtk_box_pack_start(GTK_BOX(vol_row), a->vol_label, FALSE, FALSE, 0);
 
     a->scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, 0.0, 1.0, 0.01);
-    gtk_scale_set_draw_value(GTK_SCALE(a->scale), TRUE);
+    gtk_scale_set_draw_value(GTK_SCALE(a->scale), FALSE); /* the level is
+        already shown by vol_label above; drawing it a second time on the
+        slider itself would just repeat the same number twice in a row
+        this compact */
     gtk_style_context_add_class(gtk_widget_get_style_context(a->scale), "pwtray-scale");
-    gtk_box_pack_start(GTK_BOX(box), a->scale, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vol_row), a->scale, TRUE, TRUE, 0);
     a->scale_handler = g_signal_connect(a->scale, "value-changed",
                                          G_CALLBACK(on_scale_changed), a);
 
-    gtk_box_pack_start(GTK_BOX(box), gtk_label_new("Output"), FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(box), vol_row, FALSE, FALSE, 0);
+
     GtkWidget *combo = gtk_combo_box_text_new();
     GArray *ids = g_array_new(FALSE, FALSE, sizeof(guint));
     gint active = -1;
@@ -279,9 +289,11 @@ static GtkWidget *build_popup(App *a, gboolean arrow_up, gboolean show_arrow)
         gtk_cell_renderer_set_fixed_size(cell, POPUP_WIDTH_MAX - COMBO_CHROME_PX, -1);
         g_list_free(cells);
     }
+    gtk_style_context_add_class(gtk_widget_get_style_context(combo), "pwtray-control");
     gtk_box_pack_start(GTK_BOX(box), combo, FALSE, FALSE, 0);
 
     a->mute_btn = gtk_button_new_with_label("Mute");
+    gtk_style_context_add_class(gtk_widget_get_style_context(a->mute_btn), "pwtray-control");
     g_signal_connect(a->mute_btn, "clicked", G_CALLBACK(on_mute_clicked), a);
     gtk_box_pack_start(GTK_BOX(box), a->mute_btn, FALSE, FALSE, 0);
     update_mute_button(a->mute_btn, def && def->muted);
@@ -289,7 +301,14 @@ static GtkWidget *build_popup(App *a, gboolean arrow_up, gboolean show_arrow)
     if (def) {
         a->sink_id = def->id;
         a->muted   = def->muted;
-        gtk_range_set_value(GTK_RANGE(a->scale), node_effective_volume(def));
+        gdouble vol = node_effective_volume(def);
+        gtk_range_set_value(GTK_RANGE(a->scale), vol);
+        gtk_image_set_from_icon_name(GTK_IMAGE(a->vol_icon),
+                                      volume_icon_name(def->muted, def->volume < 0 ? 0 : def->volume),
+                                      GTK_ICON_SIZE_SMALL_TOOLBAR);
+        gchar *pct = g_strdup_printf("%d%%", volume_percent(vol));
+        gtk_label_set_text(GTK_LABEL(a->vol_label), pct);
+        g_free(pct);
     }
 
     g_signal_connect(win, "destroy", G_CALLBACK(popup_destroyed), a);

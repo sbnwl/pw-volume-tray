@@ -17,9 +17,9 @@ static void install_css(void)
 {
     GtkCssProvider *css = gtk_css_provider_new();
     gtk_css_provider_load_from_data(css,
-        "label.pwtray-title { font-weight: 600; opacity: 0.85; }"
         "scale.pwtray-scale trough,"
         "scale.pwtray-scale trough highlight { min-height: 1px; border-radius: 2px; }"
+        ".pwtray-control { min-height: 22px; padding-top: 2px; padding-bottom: 2px; }"
         , -1, NULL);
     gtk_style_context_add_provider_for_screen(
         gdk_screen_get_default(), GTK_STYLE_PROVIDER(css),
