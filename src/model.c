@@ -90,3 +90,14 @@ Node *snapshot_default(GPtrArray *nodes)
     }
     return nodes->len ? g_ptr_array_index(nodes, 0) : NULL;
 }
+
+/* What the volume slider should actually show: 0 while muted, regardless
+ * of the underlying (unchanged) volume value — mute and volume are
+ * independent in PipeWire, so this is a display-only override, not a
+ * mutation. Single source of truth shared by refresh_icon() (state.c)
+ * and build_popup() (popup.c) so both agree, always, on one definition. */
+gdouble node_effective_volume(const Node *n)
+{
+    if (!n || n->muted) return 0.0;
+    return n->volume < 0 ? 0.0 : n->volume;
+}

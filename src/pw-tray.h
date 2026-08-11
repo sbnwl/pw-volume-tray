@@ -19,8 +19,9 @@
  *                until snapshot_free(); anything that must outlive it
  *                (an id for a menu item, a name string) is copied out
  *                first.
- *   actions.c  — set_volume/set_default/bump_volume/do_toggle_mute: thin
- *                fire-and-forget wrappers over run_async().
+ *   actions.c  — set_volume/set_default/bump_volume/do_toggle_mute/
+ *                do_unmute_if_muted: thin fire-and-forget wrappers over
+ *                run_async().
  *   state.c    — refresh_icon(): the single place that reconciles the
  *                tray icon and open popup with one fresh Snapshot.
  *   popup.c    — the speech-bubble popup window: shape, positioning,
@@ -124,6 +125,7 @@ void   report_error(const gchar *msg);
 Snapshot *fetch_snapshot(void);
 void      snapshot_free(Snapshot *s);
 Node     *snapshot_default(GPtrArray *nodes);
+gdouble   node_effective_volume(const Node *n);
 
 /* -------------------------------------------------------------- actions */
 
@@ -131,6 +133,7 @@ void set_volume(guint id, gdouble v);
 void set_default(guint id);
 void bump_volume(gint pct);
 void do_toggle_mute(App *a);
+void do_unmute_if_muted(App *a);
 
 /* --------------------------------------------------------------- state */
 

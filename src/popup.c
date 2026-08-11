@@ -19,10 +19,12 @@
 
 static void on_scale_changed(GtkRange *r, App *a)
 {
-    if (a->sink_id) set_volume(a->sink_id, gtk_range_get_value(r));
+    if (!a->sink_id) return;
+    do_unmute_if_muted(a);   /* touching the slider always means "I want sound" */
+    set_volume(a->sink_id, gtk_range_get_value(r));
 }
 
-static void on_mute_clicked(GtkButton *b, App *a) { (void)b; do_toggle_mute(a); }
+static void on_mute_clicked(GtkButton *b, App *a) { (void)b; do_toggle_mute(a); refresh_icon(a); }
 
 static void on_output_changed(GtkComboBox *combo, App *a)
 {
@@ -286,7 +288,7 @@ static GtkWidget *build_popup(App *a, gboolean arrow_up, gboolean show_arrow)
     if (def) {
         a->sink_id = def->id;
         a->muted   = def->muted;
-        gtk_range_set_value(GTK_RANGE(a->scale), def->volume < 0 ? 0 : def->volume);
+        gtk_range_set_value(GTK_RANGE(a->scale), node_effective_volume(def));
     }
 
     g_signal_connect(win, "destroy", G_CALLBACK(popup_destroyed), a);

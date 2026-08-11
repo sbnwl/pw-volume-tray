@@ -29,3 +29,17 @@ void do_toggle_mute(App *a)
     if (a->mute_btn)
         gtk_button_set_label(GTK_BUTTON(a->mute_btn), a->muted ? "Unmute" : "Mute");
 }
+
+/* Explicit unmute, not a toggle, so this can never accidentally re-mute —
+ * used by the slider's drag handler so touching the slider while muted
+ * clears mute and audibly resumes, instead of the drag silently having
+ * no effect while the mute flag stays set underneath it. No-op if
+ * already unmuted. */
+void do_unmute_if_muted(App *a)
+{
+    if (!a->muted) return;
+    run_async("wpctl set-mute @DEFAULT_SINK@ 0");
+    a->muted = FALSE;
+    if (a->mute_btn)
+        gtk_button_set_label(GTK_BUTTON(a->mute_btn), "Mute");
+}

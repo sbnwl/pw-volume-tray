@@ -28,7 +28,7 @@ void refresh_icon(App *a)
 
     if (a->scale) {
         g_signal_handler_block(a->scale, a->scale_handler);
-        gtk_range_set_value(GTK_RANGE(a->scale), vol);
+        gtk_range_set_value(GTK_RANGE(a->scale), node_effective_volume(def));
         g_signal_handler_unblock(a->scale, a->scale_handler);
     }
     if (a->mute_btn)
