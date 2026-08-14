@@ -1,3 +1,9 @@
+/* pw-tray
+ * Copyright (C) 2026 Surendra Beniwal
+ * Author Email: surendra_beniwal@yahoo.co.in
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 /*
  * osd.c — optional on-screen volume/mute notifications, via notify-send.
  *

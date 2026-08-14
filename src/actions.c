@@ -1,3 +1,9 @@
+/* pw-tray
+ * Copyright (C) 2026 Surendra Beniwal
+ * Author Email: surendra_beniwal@yahoo.co.in
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 /*
  * actions.c — fire-and-forget wpctl commands.
  *
@@ -10,7 +16,13 @@
 #include "pw-tray.h"
 #include <stdlib.h> /* abs() */
 
-void set_volume(guint id, gdouble v) { run_async("wpctl set-volume %u %.3f", id, v); }
+/* -l 1.0 caps this at 100% explicitly. wpctl has no volume ceiling of
+ * its own unless told one — it defaults to allowing boosted volume up to
+ * 150%. The popup's slider can never ask for more than 1.0 anyway (its
+ * GTK range is capped at build time), so this is defense-in-depth here,
+ * not a fix for a live bug — but see bump_volume() below, where the same
+ * missing -l was a real one. */
+void set_volume(guint id, gdouble v) { run_async("wpctl set-volume -l 1.0 %u %.3f", id, v); }
 /* Deliberately synchronous (unlike most actions here) — same reasoning
  * as toggle_mute_cmd() below: both of this function's call sites
  * (popup.c's output combo, trayicon.c's right-click menu) immediately
@@ -41,9 +53,14 @@ static void toggle_mute_cmd(void)
     g_free(out);
 }
 
+/* -l 1.0 caps this at 100%, matching set_volume() above and the popup
+ * slider's own 0.0-1.0 GTK range. Without it, this was the one path that
+ * could actually exceed 100%: a relative "n%+" bump has no ceiling of
+ * its own, so repeated scrolling could climb to wpctl's default 150%
+ * even though every other volume control in the app was capped at 100%. */
 void bump_volume(gint pct)
 {
-    run_async("wpctl set-volume @DEFAULT_SINK@ %d%%%s", abs(pct), pct < 0 ? "-" : "+");
+    run_async("wpctl set-volume -l 1.0 @DEFAULT_SINK@ %d%%%s", abs(pct), pct < 0 ? "-" : "+");
 }
 
 /* Sets both the mute button's label and its visual state from one place,

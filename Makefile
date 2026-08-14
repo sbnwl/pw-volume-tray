@@ -1,3 +1,9 @@
+# pw-tray
+# Copyright (C) 2026 Surendra Beniwal
+# Author Email: surendra_beniwal@yahoo.co.in
+# SPDX-License-Identifier: GPL-3.0-or-later
+# 
+
 CC     ?= gcc
 PKG    := gtk+-3.0
 CFLAGS += -std=gnu11 -Wall -Wextra -O2 $(shell pkg-config --cflags $(PKG))

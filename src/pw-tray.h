@@ -1,3 +1,9 @@
+/* pw-tray
+ * Copyright (C) 2026 Surendra Beniwal
+ * Author Email: surendra_beniwal@yahoo.co.in
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 /*
  * pw-tray.h — shared types and cross-module declarations.
  *

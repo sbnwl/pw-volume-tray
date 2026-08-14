@@ -2,6 +2,8 @@
 
 A deliberately small GTK3/XEmbed volume tray applet for PipeWire/WirePlumber,
 built for Openbox + Tint2.
+![pw-tray popup](data/pw-tray_vol_unmuted.png)
+![pw-tray popup](data/pw-tray_vol_muted.png)
 
 ## Controls
 
@@ -110,6 +112,10 @@ make uninstall            # matches whatever PREFIX you installed with
 - `PWTRAY_MIXER` — command launched by "Open mixer" (default: `pavucontrol`).
   Optional: if the command isn't installed, clicking "Open mixer" simply
   does nothing.
+
+## License
+
+SPDX-License-Identifier: GPL-3.0-or-later
 
 ## Layout
 
